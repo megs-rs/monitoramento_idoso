@@ -12,8 +12,8 @@
 
 ## 2. Processamento (por câmera)
 
-- [ ] Captura de frames com OpenCV (thread por câmera)
-- [ ] Detecção de pessoa com YOLO (ultralytics)
+- [x] Captura de frames com OpenCV (thread por câmera)
+- [x] Detecção de pessoa com YOLO (ultralytics)
 - [ ] Estimativa de pose com MediaPipe
 - [ ] Lógica de queda (heurística):
   - [ ] Alta velocidade nos keypoints do quadril/torso

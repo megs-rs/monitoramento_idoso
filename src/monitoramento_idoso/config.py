@@ -14,6 +14,11 @@ _DEFAULT_CONFIG = {
         "username": "admin",
         "password": "admin",
     },
+    "processing": {
+        "model": "yolo11n.pt",
+        "confidence": 0.5,
+        "reconnect_delay": 2,
+    },
 }
 
 _PROJECT_ROOT = Path(__file__).parent.parent.parent

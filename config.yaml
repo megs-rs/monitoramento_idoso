@@ -9,3 +9,8 @@ manual_cameras:
   - ip: 192.168.31.117
     port: 10080
     name: "Câmera Principal"
+
+processing:
+  model: "yolo11n.pt"
+  confidence: 0.5
+  reconnect_delay: 2
