@@ -1,0 +1,11 @@
+discovery:
+  timeout: 5
+
+# Credenciais ONVIF via arquivo .env na raiz do projeto:
+#   MO_ONVIF_USER=admin
+#   MO_ONVIF_PASS=sua_senha
+
+manual_cameras:
+  - ip: 192.168.31.117
+    port: 10080
+    name: "Câmera Principal"

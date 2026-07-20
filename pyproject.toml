@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "monitoramento-idoso"
+version = "0.1.0"
+description = "Sistema de monitoramento de idosos com câmeras IP e detecção de quedas"
+requires-python = ">=3.11"
+dependencies = [
+    "onvif-python>=0.2.10",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+
+[project.scripts]
+mo-discover = "monitoramento_idoso.cli:discover_main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
