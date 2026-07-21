@@ -26,7 +26,7 @@ dev = [
 [project.scripts]
 mo-discover = "monitoramento_idoso.cli:discover_main"
 mo-monitor = "monitoramento_idoso.cli:monitor_main"
-mo-dashboard = "monitoramento_idoso.ui.dashboard:run_dashboard"
+mo-dashboard = "monitoramento_idoso.cli:dashboard_main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

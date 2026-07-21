@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import argparse
 import logging
+import subprocess
 import sys
+from pathlib import Path
 
 import time
 
@@ -216,3 +218,8 @@ def monitor_main() -> None:
             proc.stop()
         database.close()
         print("Done.")
+
+
+def dashboard_main() -> None:
+    dashboard_path = Path(__file__).parent / "ui" / "dashboard.py"
+    subprocess.run([sys.executable, "-m", "streamlit", "run", str(dashboard_path)], check=True)
