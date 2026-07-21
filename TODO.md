@@ -50,7 +50,7 @@
 
 ```
 src/monitoramento_idoso/
-├── cli.py                    # mo-discover, mo-monitor
+├── cli.py                    # mo-discover, mo-monitor, mo-dashboard
 ├── config.py                 # load_config() com deep merge
 ├── models/camera.py          # CameraInfo dataclass
 ├── discovery/
