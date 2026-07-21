@@ -110,6 +110,7 @@ class CameraProcessor:
         lost_count = 0
         arms_raised_count = 0
         arms_raised_seen = False
+        frame_count = 0
 
         while self._running:
             if cap is None or not cap.isOpened():
@@ -136,6 +137,10 @@ class CameraProcessor:
                 continue
 
             self.clip_recorder.add_frame(frame)
+            frame_count += 1
+
+            if frame_count % 450 == 0:
+                logger.debug("Processing %s — %d frames processed", self.camera.ip, frame_count)
 
             detections = self.detector.detect(frame)
             if detections:
@@ -158,23 +163,12 @@ class CameraProcessor:
                 arms_raised_seen = False
                 arms_raised_count = 0
 
-            if person_seen and not self.pose_estimator:
-                logger.warning("Person detected but no pose estimator on %s", self.camera.ip)
-
             if person_seen and self.pose_estimator:
                 pose = self.pose_estimator.estimate(frame)
-                if pose.visible:
-                    if pose.arms_raised:
-                        arms_raised_count += 1
-                        logger.debug(
-                            "Arms raised detected on %s (count=%d/%d)",
-                            self.camera.ip, arms_raised_count, ARMS_RAISED_DEBOUNCE,
-                        )
-                    else:
-                        arms_raised_count = 0
+                if pose.visible and pose.arms_raised:
+                    arms_raised_count += 1
                 else:
                     arms_raised_count = 0
-                    logger.debug("Pose not visible on %s", self.camera.ip)
 
                 if not arms_raised_seen and arms_raised_count >= ARMS_RAISED_DEBOUNCE:
                     arms_raised_seen = True
