@@ -165,6 +165,11 @@ class CameraProcessor:
 
             if person_seen and self.pose_estimator:
                 pose = self.pose_estimator.estimate(frame)
+                if frame_count % 30 == 0:
+                    logger.debug(
+                        "Pose on %s — visible=%s arms_raised=%s",
+                        self.camera.ip, pose.visible, pose.arms_raised,
+                    )
                 if pose.visible and pose.arms_raised:
                     arms_raised_count += 1
                 else:
