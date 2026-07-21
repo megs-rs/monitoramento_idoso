@@ -7,5 +7,7 @@ dist/
 build/
 .onvif-python/
 *.pt
+*.task
 clips/
 data/
+models/

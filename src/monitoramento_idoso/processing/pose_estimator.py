@@ -2,12 +2,17 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from pathlib import Path
 
 import mediapipe as mp
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
-mp_pose = mp.solutions.pose
+mp_tasks = mp.tasks
+mp_vision = mp_tasks.vision
+
+_MODEL_PATH = Path(__file__).parent.parent.parent.parent / "models" / "pose_landmarker_lite.task"
 
 
 @dataclass
@@ -24,32 +29,43 @@ class PoseData:
 
 class PoseEstimator:
     def __init__(self, min_detection_confidence: float = 0.5):
-        self.pose = mp_pose.Pose(
-            min_detection_confidence=min_detection_confidence,
-            model_complexity=0,
+        if not _MODEL_PATH.exists():
+            raise FileNotFoundError(
+                f"Pose model not found at {_MODEL_PATH}. "
+                "Download it from https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker"
+            )
+
+        base_options = mp_tasks.BaseOptions(model_asset_path=str(_MODEL_PATH))
+        options = mp_vision.PoseLandmarkerOptions(
+            base_options=base_options,
+            running_mode=mp_vision.RunningMode.IMAGE,
+            min_pose_detection_confidence=min_detection_confidence,
+            num_poses=1,
         )
+        self.pose_landmarker = mp_vision.PoseLandmarker.create_from_options(options)
 
     def estimate(self, frame) -> PoseData:
-        rgb = frame[:, :, ::-1]
-        results = self.pose.process(rgb)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
+        result = self.pose_landmarker.detect(mp_image)
 
-        if not results.pose_landmarks:
+        if not result.pose_landmarks:
             return PoseData()
 
-        lm = results.pose_landmarks.landmark
+        landmarks = result.pose_landmarks[0]
 
-        def get_point(landmark):
-            return (landmark.x, landmark.y)
+        def get_point(idx: int):
+            lm = landmarks[idx]
+            return (lm.x, lm.y)
 
-        left_wrist = get_point(lm[mp_pose.PoseLandmark.LEFT_WRIST])
-        right_wrist = get_point(lm[mp_pose.PoseLandmark.RIGHT_WRIST])
-        left_shoulder = get_point(lm[mp_pose.PoseLandmark.LEFT_SHOULDER])
-        right_shoulder = get_point(lm[mp_pose.PoseLandmark.RIGHT_SHOULDER])
-        left_hip = get_point(lm[mp_pose.PoseLandmark.LEFT_HIP])
-        right_hip = get_point(lm[mp_pose.PoseLandmark.RIGHT_HIP])
+        left_wrist = get_point(15)
+        right_wrist = get_point(16)
+        left_shoulder = get_point(11)
+        right_shoulder = get_point(12)
+        left_hip = get_point(23)
+        right_hip = get_point(24)
 
         all_visible = all(
-            p is not None and p[0] > 0 and p[1] > 0
+            p[0] > 0 and p[1] > 0
             for p in [left_wrist, right_wrist, left_shoulder, right_shoulder, left_hip, right_hip]
         )
 
@@ -72,5 +88,5 @@ class PoseEstimator:
         )
 
     def __del__(self):
-        if hasattr(self, "pose"):
-            self.pose.close()
+        if hasattr(self, "pose_landmarker"):
+            self.pose_landmarker.close()
