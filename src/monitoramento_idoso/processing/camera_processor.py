@@ -167,18 +167,23 @@ class CameraProcessor:
                 pose = self.pose_estimator.estimate(frame)
                 if frame_count % 30 == 0:
                     logger.debug(
-                        "Pose on %s — visible=%s arms_raised=%s",
+                        "POSE_DEBUG %s visible=%s arms=%s",
                         self.camera.ip, pose.visible, pose.arms_raised,
                     )
                 if pose.visible and pose.arms_raised:
                     arms_raised_count += 1
-                else:
+                elif pose.visible and not pose.arms_raised:
                     arms_raised_count = 0
+                # else: pose not visible — do nothing, keep count
 
                 if not arms_raised_seen and arms_raised_count >= ARMS_RAISED_DEBOUNCE:
                     arms_raised_seen = True
                     logger.info("Arms raised on %s", self.camera.ip)
                     self._trigger_event("arms_raised", frame)
+
+            elif person_seen and not self.pose_estimator:
+                if frame_count % 30 == 0:
+                    logger.debug("POSE_DEBUG %s no pose_estimator", self.camera.ip)
 
         if cap is not None:
             cap.release()

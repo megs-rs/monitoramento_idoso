@@ -18,6 +18,12 @@
 - [x] Debounce de detecção (5 frames) para evitar flickering
 - [x] Estimativa de pose com MediaPipe (braços levantados)
 - [x] Detecção de braços levantados como alerta
+- [x] Fix: debounce de pose não reseta mais quando MediaPipe perde detecção (flicker)
+- [ ] **PROBLEMA:** MediaPipe lite tem taxa de detecção muito baixa (~10%) e inconsistente
+  - Modelos alternativos: `pose_landmarker_full` (maior, mais estável)
+  - Ou trocar para abordagem diferente (ex: detecção de braços com YOLO pose)
+- [ ] Testar com modelo full para validar se resolve a instabilidade
+- [ ] Considerar fallback: se MediaPipe não detecta, usar apenas detecção de pessoa
 
 ## 3. Módulo de Eventos
 

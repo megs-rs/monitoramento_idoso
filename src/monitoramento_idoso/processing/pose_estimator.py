@@ -49,6 +49,7 @@ class PoseEstimator:
         result = self.pose_landmarker.detect(mp_image)
 
         if not result.pose_landmarks:
+            logger.debug("POSE_DEBUG estimate: no landmarks detected")
             return PoseData()
 
         landmarks = result.pose_landmarks[0]
@@ -75,6 +76,13 @@ class PoseEstimator:
             left_raised = left_wrist[1] < avg_shoulder_y
             right_raised = right_wrist[1] < avg_shoulder_y
             arms_raised = left_raised or right_raised
+
+        logger.debug(
+            "POSE_DEBUG estimate: visible=%s arms=%s wrists=(%.2f,%.2f) shoulders=(%.2f,%.2f)",
+            all_visible, arms_raised,
+            left_wrist[1], right_wrist[1],
+            left_shoulder[1], right_shoulder[1],
+        )
 
         return PoseData(
             left_wrist=left_wrist,
