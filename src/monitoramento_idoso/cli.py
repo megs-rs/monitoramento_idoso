@@ -9,8 +9,11 @@ import time
 from monitoramento_idoso.config import load_config
 from monitoramento_idoso.discovery import discover_cameras, extract_rtsp_urls
 from monitoramento_idoso.discovery.rtsp_extractor import mask_url
+from monitoramento_idoso.events.clip_recorder import ClipRecorder
+from monitoramento_idoso.events.database import EventDatabase
+from monitoramento_idoso.events.notifier import TelegramNotifier
 from monitoramento_idoso.models import CameraInfo
-from monitoramento_idoso.processing import CameraProcessor, PersonDetector
+from monitoramento_idoso.processing import CameraProcessor, PersonDetector, PoseEstimator
 
 
 def discover_main() -> None:
@@ -150,6 +153,7 @@ def monitor_main() -> None:
     config = load_config()
     onvif_cfg = config["onvif"]
     proc_cfg = config["processing"]
+    events_cfg = config["events"]
 
     username = args.username or onvif_cfg.get("username", "admin")
     password = args.password or onvif_cfg.get("password", "admin")
@@ -171,11 +175,33 @@ def monitor_main() -> None:
         confidence=proc_cfg.get("confidence", 0.5),
     )
 
+    pose_estimator = PoseEstimator()
+
+    database = EventDatabase(db_path=events_cfg.get("db_path", "data/events.db"))
+
+    notifier = None
+    import os
+    from dotenv import load_dotenv
+    load_dotenv()
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    if bot_token and chat_id:
+        notifier = TelegramNotifier(bot_token, chat_id)
+        print("Telegram notifications enabled")
+    else:
+        print("Telegram notifications disabled (set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env)")
+
+    clip_recorder = ClipRecorder(duration_seconds=events_cfg.get("clip_duration", 30))
+
     processors = []
     for cam in cameras_with_rtsp:
         proc = CameraProcessor(
             camera=cam,
             detector=detector,
+            pose_estimator=pose_estimator,
+            database=database,
+            notifier=notifier,
+            clip_recorder=clip_recorder,
             reconnect_delay=proc_cfg.get("reconnect_delay", 2),
         )
         proc.start()
@@ -188,4 +214,5 @@ def monitor_main() -> None:
         print("\nStopping...")
         for proc in processors:
             proc.stop()
+        database.close()
         print("Done.")

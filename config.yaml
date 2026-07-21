@@ -5,6 +5,10 @@ discovery:
 #   MO_ONVIF_USER=admin
 #   MO_ONVIF_PASS=sua_senha
 
+# Credenciais Telegram via .env:
+#   TELEGRAM_BOT_TOKEN=seu_token
+#   TELEGRAM_CHAT_ID=seu_chat_id
+
 manual_cameras:
   - ip: 192.168.31.117
     port: 10080
@@ -14,3 +18,8 @@ processing:
   model: "yolo11n.pt"
   confidence: 0.5
   reconnect_delay: 2
+
+events:
+  db_path: "data/events.db"
+  clip_dir: "clips"
+  clip_duration: 30

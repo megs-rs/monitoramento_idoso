@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "monitoramento-idoso"
-version = "0.2.0"
+version = "0.3.0"
 description = "Sistema de monitoramento de idosos com câmeras IP e detecção de quedas"
 requires-python = ">=3.11"
 dependencies = [
@@ -13,6 +13,9 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "opencv-python>=4.8.0",
     "ultralytics>=8.1.0",
+    "python-telegram-bot>=20.0",
+    "mediapipe>=0.10.0",
+    "streamlit>=1.28.0",
 ]
 
 [project.optional-dependencies]
@@ -23,6 +26,7 @@ dev = [
 [project.scripts]
 mo-discover = "monitoramento_idoso.cli:discover_main"
 mo-monitor = "monitoramento_idoso.cli:monitor_main"
+mo-dashboard = "monitoramento_idoso.ui.dashboard:run_dashboard"
 
 [tool.setuptools.packages.find]
 where = ["src"]

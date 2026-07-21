@@ -19,6 +19,11 @@ _DEFAULT_CONFIG = {
         "confidence": 0.5,
         "reconnect_delay": 2,
     },
+    "events": {
+        "db_path": "data/events.db",
+        "clip_dir": "clips",
+        "clip_duration": 30,
+    },
 }
 
 _PROJECT_ROOT = Path(__file__).parent.parent.parent

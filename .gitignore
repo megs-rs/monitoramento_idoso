@@ -7,3 +7,5 @@ dist/
 build/
 .onvif-python/
 *.pt
+clips/
+data/
