@@ -28,6 +28,7 @@
   1. `ffmpeg -f v4l2 -framerate 30 -video_size 640x480 -i /dev/video0 -c:v libx264 -preset ultrafast -tune zerolatency -f rtsp -rtsp_transport tcp rtsp://0.0.0.0:8554/webcam`
   2. Config em `config.yaml`: `rtsp_url: "rtsp://127.0.0.1:8554/webcam"`
   3. `mo-monitor -v`
+- [ ] **Avaliar câmera/webcam antes de testar:** resolução mínima 640x480, 15fps+, boa iluminação
 
 ## 3. Módulo de Eventos
 
