@@ -68,13 +68,14 @@ def discover_main() -> None:
 
     manual = config.get("manual_cameras") or []
     for entry in manual:
-        cameras.append(
-            CameraInfo(
-                ip=entry["ip"],
-                port=entry.get("port", 80),
-                model=entry.get("name", ""),
-            )
+        cam = CameraInfo(
+            ip=entry["ip"],
+            port=entry.get("port", 80),
+            model=entry.get("name", ""),
         )
+        if "rtsp_url" in entry:
+            cam.rtsp_urls["manual"] = entry["rtsp_url"]
+        cameras.append(cam)
 
     if not cameras:
         print("No cameras found on the network.")
@@ -111,16 +112,18 @@ def _get_cameras(config: dict, username: str, password: str) -> list[CameraInfo]
 
     manual = config.get("manual_cameras") or []
     for entry in manual:
-        cameras.append(
-            CameraInfo(
-                ip=entry["ip"],
-                port=entry.get("port", 80),
-                model=entry.get("name", ""),
-            )
+        cam = CameraInfo(
+            ip=entry["ip"],
+            port=entry.get("port", 80),
+            model=entry.get("name", ""),
         )
+        if "rtsp_url" in entry:
+            cam.rtsp_urls["manual"] = entry["rtsp_url"]
+        cameras.append(cam)
 
     for cam in cameras:
-        extract_rtsp_urls(cam, username=username, password=password)
+        if not cam.rtsp_urls:
+            extract_rtsp_urls(cam, username=username, password=password)
 
     return cameras
 
