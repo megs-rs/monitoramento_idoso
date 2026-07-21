@@ -222,4 +222,7 @@ def monitor_main() -> None:
 
 def dashboard_main() -> None:
     dashboard_path = Path(__file__).parent / "ui" / "dashboard.py"
-    subprocess.run([sys.executable, "-m", "streamlit", "run", str(dashboard_path)], check=True)
+    try:
+        subprocess.run([sys.executable, "-m", "streamlit", "run", str(dashboard_path)])
+    except KeyboardInterrupt:
+        print("\nDone.")
