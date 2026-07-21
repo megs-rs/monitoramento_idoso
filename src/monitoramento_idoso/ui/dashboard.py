@@ -185,3 +185,7 @@ def _stop_all_cameras() -> None:
         if proc.is_running:
             proc.stop()
     st.rerun()
+
+
+if __name__ == "__main__" or True:
+    run_dashboard()
