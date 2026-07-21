@@ -24,6 +24,10 @@
   - Ou trocar para abordagem diferente (ex: detecção de braços com YOLO pose)
 - [ ] Testar com modelo full para validar se resolve a instabilidade
 - [ ] Considerar fallback: se MediaPipe não detecta, usar apenas detecção de pessoa
+- [ ] **Testar com webcam via FFmpeg:**
+  1. `ffmpeg -f v4l2 -framerate 30 -video_size 640x480 -i /dev/video0 -c:v libx264 -preset ultrafast -tune zerolatency -f rtsp -rtsp_transport tcp rtsp://0.0.0.0:8554/webcam`
+  2. Config em `config.yaml`: `rtsp_url: "rtsp://127.0.0.1:8554/webcam"`
+  3. `mo-monitor -v`
 
 ## 3. Módulo de Eventos
 
