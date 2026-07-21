@@ -1,6 +1,6 @@
 # Monitoramento Idoso
 
-Sistema de monitoramento de idosos com câmeras IP e detecção de quedas via IA.
+Sistema de monitoramento de idosos com câmeras IP e detecção de alertas via IA.
 
 ## Requisitos
 
@@ -12,12 +12,12 @@ Sistema de monitoramento de idosos com câmeras IP e detecção de quedas via IA
 ```bash
 git clone <repo>
 cd monitoramento_idoso
-pip install -e .
+pip install -e ".[dev]"
 ```
 
 ## Configuração
 
-### 1. Credenciais
+### 1. Credenciais ONVIF
 
 Crie o arquivo `.env` na raiz do projeto:
 
@@ -26,7 +26,20 @@ MO_ONVIF_USER=admin
 MO_ONVIF_PASS=sua_senha
 ```
 
-### 2. Câmeras
+### 2. Telegram (opcional)
+
+Para receber notificações no Telegram, adicione no `.env`:
+
+```
+TELEGRAM_BOT_TOKEN=seu_token
+TELEGRAM_CHAT_ID=seu_chat_id
+```
+
+Para obter o token: converse com [@BotFather](https://t.me/BotFather) no Telegram e use `/newbot`.
+
+Para obter o chat_id: mande uma mensagem para seu bot e acesse `https://api.telegram.org/bot<SEU_TOKEN>/getUpdates`.
+
+### 3. Câmeras
 
 Edite `config.yaml` para adicionar câmeras manuais (quando a descoberta automática não encontra):
 
@@ -35,6 +48,28 @@ manual_cameras:
   - ip: 192.168.31.117
     port: 10080
     name: "Sala"
+```
+
+### 4. Configuração completa
+
+```yaml
+discovery:
+  timeout: 5
+
+manual_cameras:
+  - ip: 192.168.31.117
+    port: 10080
+    name: "Câmera Principal"
+
+processing:
+  model: "yolo11n.pt"
+  confidence: 0.5
+  reconnect_delay: 2
+
+events:
+  db_path: "data/events.db"
+  clip_dir: "clips"
+  clip_duration: 30
 ```
 
 ## Uso
@@ -47,16 +82,33 @@ mo-discover -v           # Modo verbose (debug)
 mo-discover --no-rtsp    # Só listar, sem conectar ONVIF
 ```
 
-### Via Python
+### Monitorar (modo terminal)
 
-```python
-from monitoramento_idoso.discovery import discover_cameras, extract_rtsp_urls
-
-cameras = discover_cameras(timeout=5)
-for cam in cameras:
-    extract_rtsp_urls(cam, username="admin", password="senha")
-    print(cam.rtsp_urls)
+```bash
+mo-monitor              # Inicia detecção de pessoas
+mo-monitor -v           # Modo verbose (debug)
 ```
+
+Funcionamento:
+- Conecta nas câmeras via RTSP
+- Detecta pessoas com YOLO (1 thread por câmera)
+- Detecta braços levantados com MediaPipe
+- Salva clipes de 30s ao detectar alerta
+- Registra eventos no SQLite
+- Envia notificação no Telegram (se configurado)
+
+### Dashboard (modo web)
+
+```bash
+mo-dashboard            # Abre navegador em http://localhost:8501
+```
+
+Acesse de outra máquina: `http://IP_DESTA_MAQUINA:8501`
+
+Funcionalidades:
+- Iniciar/parar monitoramento
+- Histórico de eventos
+- Configuração de parâmetros
 
 ### Visualizar stream
 
@@ -68,13 +120,24 @@ ffplay rtsp://admin:sua_senha@192.168.31.117:10554/tcp/av0_0
 
 ```
 src/monitoramento_idoso/
-├── config.py                  # Leitura de config.yaml + .env
-├── cli.py                     # CLI mo-discover
+├── cli.py                    # mo-discover, mo-monitor, mo-dashboard
+├── config.py                 # Leitura de config.yaml + .env
 ├── models/
-│   └── camera.py              # Dataclass CameraInfo
-└── discovery/
-    ├── onvif_discovery.py     # WS-Discovery (multicast)
-    └── rtsp_extractor.py      # Extração de URLs RTSP via ONVIF
+│   └── camera.py             # Dataclass CameraInfo
+├── discovery/
+│   ├── onvif_discovery.py    # WS-Discovery (multicast)
+│   └── rtsp_extractor.py     # Extração de URLs RTSP via ONVIF
+├── processing/
+│   ├── detector.py           # PersonDetector (YOLOv11n)
+│   ├── pose_estimator.py     # PoseEstimator (MediaPipe)
+│   └── camera_processor.py   # CameraProcessor (thread por câmera)
+├── events/
+│   ├── models.py             # Event dataclass
+│   ├── database.py           # EventDatabase (SQLite)
+│   ├── clip_recorder.py      # ClipRecorder (buffer circular)
+│   └── notifier.py           # TelegramNotifier
+└── ui/
+    └── dashboard.py          # Dashboard Streamlit
 ```
 
 ## Segurança
