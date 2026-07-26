@@ -9,7 +9,7 @@ Sistema de monitoramento de idosos com câmeras IP. Detecta pessoas e alertas (b
 - **Python 3.11+**
 - **YOLOv11n** (ultralytics) — detecção de pessoa
 - **MediaPipe** — estimativa de pose (braços levantados)
-- **OpenCV** — captura de frames RTSP
+- **OpenCV** — captura de frames (RTSP ou V4L2)
 - **Streamlit** — dashboard web
 - **SQLite** — registro de eventos
 - **python-telegram-bot** — notificações
@@ -40,7 +40,7 @@ src/monitoramento_idoso/
 ├── events/
 │   ├── models.py             # Event dataclass
 │   ├── database.py           # EventDatabase (SQLite)
-│   ├── clip_recorder.py      # ClipRecorder (buffer circular 30s)
+│   ├── clip_recorder.py      # ClipRecorder (15s pré + 15s pós-evento)
 │   └── notifier.py           # TelegramNotifier
 └── ui/
     └── dashboard.py          # Dashboard Streamlit
@@ -67,7 +67,7 @@ Câmera RTSP → OpenCV (frame) → YOLO (pessoa) → MediaPipe (pose)
 - Threads daemon para processamento por câmera
 - Debounce de 5 frames (detecção) e 10 frames (pose) para evitar flickering
 - Config: defaults em `_DEFAULT_CONFIG`, merge com YAML, override por env vars
-- Eventos: buffer circular em memória, salva .mp4 sob demanda
+- Eventos: buffer circular 15s em memória, grava 15s pós-evento, salva .mp4
 
 ## Pendências
 
