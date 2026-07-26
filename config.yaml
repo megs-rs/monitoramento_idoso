@@ -13,6 +13,10 @@ manual_cameras:
   - ip: 192.168.31.117
     port: 10080
     name: "Câmera Principal"
+#  - ip: 127.0.0.1
+#    port: 0
+#    name: "Webcam"
+#    rtsp_url: "/dev/video0"
 
 processing:
   model: "yolo11n.pt"
@@ -22,4 +26,5 @@ processing:
 events:
   db_path: "data/events.db"
   clip_dir: "clips"
-  clip_duration: 30
+  clip_pre_seconds: 15
+  clip_post_seconds: 15

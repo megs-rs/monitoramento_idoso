@@ -69,8 +69,20 @@ class CameraProcessor:
             return None
         return next(iter(urls.values()))
 
-    def _trigger_event(self, event_type: str, frame) -> None:
-        clip_path = self.clip_recorder.save(self.camera.ip)
+    @staticmethod
+    def _resolve_source(url: str) -> str | int:
+        if url.startswith("/dev/video"):
+            try:
+                return int(url.removeprefix("/dev/video"))
+            except ValueError:
+                return url
+        return url
+
+    V4L2_WARMUP_FRAMES = 30
+
+    def _trigger_event(self, event_type: str, frame, clip_path=None) -> None:
+        if clip_path is None:
+            clip_path = self.clip_recorder.save(self.camera.ip)
 
         if self.database:
             event = Event(
@@ -104,20 +116,28 @@ class CameraProcessor:
             self._running = False
             return
 
+        source = self._resolve_source(rtsp_url)
+        is_v4l2 = isinstance(source, int)
+
         cap: cv2.VideoCapture | None = None
         person_seen = False
         detect_count = 0
         lost_count = 0
         arms_raised_count = 0
         arms_raised_seen = False
+        pending_event: str | None = None
         frame_count = 0
+        warmup_left = 0
 
         while self._running:
             if cap is None or not cap.isOpened():
                 if cap is not None:
                     cap.release()
                 logger.info("Connecting to %s ...", self.camera.ip)
-                cap = cv2.VideoCapture(rtsp_url)
+                if is_v4l2:
+                    cap = cv2.VideoCapture(source, cv2.CAP_V4L2)
+                else:
+                    cap = cv2.VideoCapture(source)
                 if not cap.isOpened():
                     logger.warning(
                         "Cannot connect to %s — retrying in %ss",
@@ -127,6 +147,7 @@ class CameraProcessor:
                     time.sleep(self.reconnect_delay)
                     continue
                 logger.info("Connected to %s", self.camera.ip)
+                warmup_left = self.V4L2_WARMUP_FRAMES if is_v4l2 else 0
 
             ret, frame = cap.read()
             if not ret:
@@ -136,11 +157,18 @@ class CameraProcessor:
                 time.sleep(self.reconnect_delay)
                 continue
 
-            self.clip_recorder.add_frame(frame)
+            if warmup_left > 0:
+                warmup_left -= 1
+                continue
+
+            clip_done = self.clip_recorder.add_frame(frame)
             frame_count += 1
 
-            if frame_count % 450 == 0:
-                logger.debug("Processing %s — %d frames processed", self.camera.ip, frame_count)
+            if clip_done and pending_event:
+                logger.info("Post-event recording complete for %s", self.camera.ip)
+                clip_path = self.clip_recorder.save(self.camera.ip)
+                self._trigger_event(pending_event, frame, clip_path)
+                pending_event = None
 
             detections = self.detector.detect(frame)
             if detections:
@@ -165,11 +193,6 @@ class CameraProcessor:
 
             if person_seen and self.pose_estimator:
                 pose = self.pose_estimator.estimate(frame)
-                if frame_count % 30 == 0:
-                    logger.debug(
-                        "POSE_DEBUG %s visible=%s arms=%s",
-                        self.camera.ip, pose.visible, pose.arms_raised,
-                    )
                 if pose.visible and pose.arms_raised:
                     arms_raised_count += 1
                 elif pose.visible and not pose.arms_raised:
@@ -178,12 +201,10 @@ class CameraProcessor:
 
                 if not arms_raised_seen and arms_raised_count >= ARMS_RAISED_DEBOUNCE:
                     arms_raised_seen = True
-                    logger.info("Arms raised on %s", self.camera.ip)
-                    self._trigger_event("arms_raised", frame)
+                    logger.info("Arms raised on %s — recording post-event", self.camera.ip)
+                    self.clip_recorder.start_post_event()
+                    pending_event = "arms_raised"
 
-            elif person_seen and not self.pose_estimator:
-                if frame_count % 30 == 0:
-                    logger.debug("POSE_DEBUG %s no pose_estimator", self.camera.ip)
 
         if cap is not None:
             cap.release()

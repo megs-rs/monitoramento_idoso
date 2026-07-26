@@ -44,7 +44,7 @@ def extract_rtsp_urls(
         media = client.media()
         profiles = media.GetProfiles()
     except Exception:
-        logger.exception("Failed to get media profiles from %s", camera.ip)
+        logger.warning("Failed to get media profiles from %s (check credentials)", camera.ip)
         return camera
 
     for profile in profiles:

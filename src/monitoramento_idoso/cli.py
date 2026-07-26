@@ -52,9 +52,13 @@ def discover_main() -> None:
     args = parser.parse_args()
 
     logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
+        level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
+    if args.verbose:
+        logging.getLogger("monitoramento_idoso").setLevel(logging.DEBUG)
+        for lib in ("zeep", "onvif", "urllib3"):
+            logging.getLogger(lib).setLevel(logging.INFO)
 
     config = load_config()
     disc_cfg = config["discovery"]
@@ -151,9 +155,13 @@ def monitor_main() -> None:
     args = parser.parse_args()
 
     logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
+        level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
+    if args.verbose:
+        logging.getLogger("monitoramento_idoso").setLevel(logging.DEBUG)
+        for lib in ("zeep", "onvif", "urllib3"):
+            logging.getLogger(lib).setLevel(logging.INFO)
 
     config = load_config()
     onvif_cfg = config["onvif"]
@@ -196,7 +204,10 @@ def monitor_main() -> None:
     else:
         print("Telegram notifications disabled (set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env)")
 
-    clip_recorder = ClipRecorder(duration_seconds=events_cfg.get("clip_duration", 30))
+    clip_recorder = ClipRecorder(
+        pre_seconds=events_cfg.get("clip_pre_seconds", 15),
+        post_seconds=events_cfg.get("clip_post_seconds", 15),
+    )
 
     processors = []
     for cam in cameras_with_rtsp:
