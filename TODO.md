@@ -19,11 +19,9 @@
 - [x] Estimativa de pose com MediaPipe (braços levantados)
 - [x] Detecção de braços levantados como alerta
 - [x] Fix: debounce de pose não reseta mais quando MediaPipe perde detecção (flicker)
-- [ ] **PROBLEMA:** MediaPipe lite tem taxa de detecção muito baixa (~10%) e inconsistente
-  - Modelos alternativos: `pose_landmarker_full` (maior, mais estável)
-  - Ou trocar para abordagem diferente (ex: detecção de braços com YOLO pose)
-- [ ] Testar com modelo full para validar se resolve a instabilidade
-- [ ] Considerar fallback: se MediaPipe não detecta, usar apenas detecção de pessoa
+- [ ] **Avaliar:** MediaPipe lite funciona (~19 FPS na webcam), mas pode ser instável em câmeras IP com menor resolução/iluminação
+  - Testar modelo full para comparar estabilidade
+  - Considerar fallback: se MediaPipe não detecta, usar apenas detecção de pessoa
 - [x] **Testar com webcam direto (V4L2):**
   - [x] Suporte a `/dev/videoN` como fonte direta no `camera_processor.py`
   - [x] Conversão automática de `/dev/videoN` → índice V4L2 + warmup de 30 frames
@@ -33,8 +31,9 @@
 
 ## 3. Módulo de Eventos
 
-- [x] Gravação de clipe de 30 segundos ao detectar evento
-  - Buffer circular de frames em memória
+- [x] Gravação de clipe ao detectar evento (15s antes + 15s depois)
+  - Buffer circular de 15s em memória (pré-evento)
+  - Grava 15s adicionais após detecção (pós-evento)
   - Salva como `.mp4` em `clips/`
 - [x] Registro no SQLite (timestamp, câmera, tipo de evento)
   - Schema: `events(id, timestamp, camera_ip, event_type, clip_path)`

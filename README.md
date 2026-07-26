@@ -5,7 +5,7 @@ Sistema de monitoramento de idosos com câmeras IP e detecção de alertas via I
 ## Requisitos
 
 - Python 3.11+
-- Câmera IP com suporte ONVIF/RTSP
+- Câmera IP com suporte ONVIF/RTSP ou webcam (V4L2)
 
 ## Instalação
 
@@ -48,6 +48,11 @@ manual_cameras:
   - ip: 192.168.31.117
     port: 10080
     name: "Sala"
+  # Webcam direta (V4L2):
+  # - ip: 127.0.0.1
+  #   port: 0
+  #   name: "Webcam"
+  #   rtsp_url: "/dev/video0"
 ```
 
 ### 4. Configuração completa
@@ -69,7 +74,8 @@ processing:
 events:
   db_path: "data/events.db"
   clip_dir: "clips"
-  clip_duration: 30
+  clip_pre_seconds: 15
+  clip_post_seconds: 15
 ```
 
 ## Uso
@@ -93,7 +99,7 @@ Funcionamento:
 - Conecta nas câmeras via RTSP
 - Detecta pessoas com YOLO (1 thread por câmera)
 - Detecta braços levantados com MediaPipe
-- Salva clipes de 30s ao detectar alerta
+- Salva clipes de 30s (15s antes + 15s depois do alerta)
 - Registra eventos no SQLite
 - Envia notificação no Telegram (se configurado)
 

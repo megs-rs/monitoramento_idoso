@@ -24,6 +24,7 @@
 
 1. **Conexão com Câmeras**
    - Adição manual de URL RTSP ou descoberta via ONVIF
+   - Suporte a webcam via V4L2 (`/dev/videoN`)
    - Funciona com qualquer câmera IP que suporte RTSP
 
 2. **Processamento (por câmera em thread separada)**
@@ -31,10 +32,10 @@
    - Detecção de pessoa com YOLO (YOLOv11n)
    - Estimativa de pose com MediaPipe (landmarks: ombros, quadris, joelhos, punhos)
    - Detecção de alerta: braços levantados (punho acima do ombro)
-   - Debounce de 10 frames para evitar falsos positivos
+   - Debounce de 5 frames (detecção) e 10 frames (pose) para evitar falsos positivos
 
 3. **Módulo de Eventos**
-   - Alerta detectado → grava clipe de 30 segundos (buffer circular)
+   - Alerta detectado → grava clipe de 30 segundos (15s antes + 15s depois via buffer circular)
    - Registra no SQLite (timestamp, câmera, tipo de evento)
    - Envia notificação via Telegram (com vídeo)
 
